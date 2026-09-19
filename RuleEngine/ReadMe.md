@@ -61,14 +61,14 @@ Cooldown / throttling	/ Prevents alert storms from high-frequency sensor streams
 
 Batch-ingestion / ingest/batch endpoint handles up to 5000 readings per call for MQTT/OPC-UA bridge scenarios.
 
+a channel/queue (System.Threading.Channels) in front of ProcessReadingAsync for very high-throughput streams — decouple ingestion from rule evaluation.
+
 Dry-run-evaluation	/ /rules/{id}/evaluate lets operators validate rule logic without side effects.
 
 Testability	/ All logic sits in injectable services; the controller is thin.
 
 
 **Recommended next steps**
-
-Add a channel/queue (System.Threading.Channels) in front of ProcessReadingAsync for very high-throughput streams — decouple ingestion from rule evaluation.
 
 Persist rules to SQL Server / PostgreSQL via EF Core (implement IRuleStore).
 

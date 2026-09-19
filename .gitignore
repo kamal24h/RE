@@ -56,3 +56,5 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 /.vs/RuleEngine.slnx
+/.vs/RuleEngine.slnx/v18/.suo
+/.vs/RuleEngine.slnx/v18/DocumentLayout.json
