@@ -1,28 +1,7 @@
 ﻿
+using RuleEngine.Models.Enum;
+
 namespace RuleEngine.Models;
-
-public enum RuleSeverity { Info, Warning, Critical }
-
-public enum ComparisonOperator
-{
-    Equals, NotEquals, GreaterThan, GreaterThanOrEqual,
-    LessThan, LessThanOrEqual
-}
-
-public enum LogicalOperator { And, Or }
-
-public class RuleCondition
-{
-    public string TagName { get; set; } = string.Empty;
-    public ComparisonOperator Operator { get; set; }
-    public double Threshold { get; set; }
-}
-
-public class RuleAction
-{
-    public string Type { get; set; } = string.Empty; // Email, Webhook, Log, MqttPublish
-    public Dictionary<string, string> Parameters { get; set; } = new();
-}
 
 public class Rule
 {

@@ -1,25 +1,12 @@
-﻿
+﻿using RuleEngine.Models;
 using Microsoft.Extensions.Options;
-using RuleEngine.Models;
 
 namespace RuleEngine.Services.Ingestion;
-
-public class WorkerOptions
-{
-    /// <summary>Number of parallel consumers draining the channel.</summary>
-    public int WorkerCount { get; set; } = 4;
-
-    /// <summary>Readings pulled per iteration into a micro-batch.</summary>
-    public int BatchSize { get; set; } = 100;
-
-    /// <summary>Channel capacity used for batching.</summary>
-    public int BatchChannelCapacity { get; set; } = 1000;
-}
 
 public sealed class RuleEvaluationWorker : BackgroundService
 {
     private readonly IIngestionQueue _queue;
-    private readonly IRuleEngineService _engine;
+    private readonly IServiceScopeFactory _scopeFactory;   // <-- injected instead of IRuleEngineService
     private readonly WorkerOptions _options;
     private readonly ILogger<RuleEvaluationWorker> _logger;
 
@@ -28,12 +15,12 @@ public sealed class RuleEvaluationWorker : BackgroundService
 
     public RuleEvaluationWorker(
         IIngestionQueue queue,
-        IRuleEngineService engine,
+        IServiceScopeFactory scopeFactory,
         IOptions<WorkerOptions> options,
         ILogger<RuleEvaluationWorker> logger)
     {
         _queue = queue;
-        _engine = engine;
+        _scopeFactory = scopeFactory;
         _options = options.Value;
         _logger = logger;
     }
@@ -65,21 +52,14 @@ public sealed class RuleEvaluationWorker : BackgroundService
             {
                 batch.Add(reading);
 
-                // Non-blocking drain: greedily pull up to BatchSize before evaluating.
-                while (batch.Count < _options.BatchSize &&
-                       _queue.TryRead(out var extra))
-                {
+                while (batch.Count < _options.BatchSize && _queue.TryRead(out var extra))
                     batch.Add(extra);
-                }
 
                 await ProcessBatchAsync(workerId, batch, ct);
                 batch.Clear();
             }
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            // graceful shutdown
-        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Worker {WorkerId} crashed", workerId);
@@ -88,9 +68,13 @@ public sealed class RuleEvaluationWorker : BackgroundService
 
     private async Task ProcessBatchAsync(int workerId, List<SensorReading> batch, CancellationToken ct)
     {
+        // One scope per batch — bounded memory, correct disposal of scoped deps.
         try
         {
-            await _engine.ProcessBatchAsync(batch, ct);
+            using var scope = _scopeFactory.CreateScope();
+            var engine = scope.ServiceProvider.GetRequiredService<IRuleEngineService>();
+
+            await engine.ProcessBatchAsync(batch, ct);
             Interlocked.Add(ref _processed, batch.Count);
         }
         catch (Exception ex)

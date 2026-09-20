@@ -1,4 +1,6 @@
 ﻿
+using RuleEngine.Models.Enum;
+
 namespace RuleEngine.Models;
 
 public class RuleExecutionResult

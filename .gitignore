@@ -55,6 +55,8 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+/.vs/*
 /.vs/RuleEngine.slnx
 /.vs/RuleEngine.slnx/v18/.suo
 /.vs/RuleEngine.slnx/v18/DocumentLayout.json
+/.vs/ProjectEvaluation

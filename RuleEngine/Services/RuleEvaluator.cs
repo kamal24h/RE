@@ -1,5 +1,6 @@
 ﻿
 using RuleEngine.Models;
+using RuleEngine.Models.Enum;
 
 namespace RuleEngine.Services;
 
